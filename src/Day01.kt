@@ -41,15 +41,77 @@ fun findSimilarity(list1: List<Long>, list2: List<Long>): Long {
 }
 
 fun findFrequency(input: Long, sortedList: List<Long>): Long {
-    var frequency = 0L
+    val leftIndex = binarySearchLeft(input, sortedList)
+    val rightIndex = binarySearchRight(input, sortedList)
 
-    sortedList.forEach { number ->
-        if (number == input) {
-            frequency++
+    if (leftIndex < 0) {
+        check(rightIndex < 0)
+        return 0
+    }
+
+    check(leftIndex <= rightIndex)
+    check(sortedList[leftIndex] == input)
+    check(sortedList[rightIndex] == input)
+
+    return rightIndex - leftIndex + 1L
+}
+
+fun binarySearchLeft(needle: Long, haystack: List<Long>) : Int {
+    var start = 0
+    var end = haystack.size - 1
+
+    while (start < end) {
+        // mid can be equal to start.
+        val mid = start + (end - start) / 2
+        val target = haystack[mid]
+
+        when {
+            target < needle -> {
+                start = mid + 1
+            }
+            target > needle -> {
+                end = mid - 1
+            }
+            else -> {
+                end = mid
+            }
         }
     }
 
-    return frequency
+    if (haystack[start] == needle) {
+        return start
+    }
+
+    return -1
+}
+
+fun binarySearchRight(needle: Long, haystack: List<Long>) : Int {
+    var start = 0
+    var end = haystack.size - 1
+
+    while (start < end) {
+        // mid can be equal to end.
+        val mid = start + (end - start + 1) / 2
+        val target = haystack[mid]
+
+        when {
+            target < needle -> {
+                start = mid + 1
+            }
+            target > needle -> {
+                end = mid - 1
+            }
+            else -> {
+                start = mid
+            }
+        }
+    }
+
+    if (haystack[start] == needle) {
+        return start
+    }
+
+    return -1
 }
 
 fun findDifference(list1: List<Long>, list2: List<Long>): Long {

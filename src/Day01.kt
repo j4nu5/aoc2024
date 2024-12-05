@@ -1,3 +1,7 @@
+package dev.sinhak.aoc2024.day01
+
+import println
+import readInput
 import java.lang.Long.parseLong
 import kotlin.math.abs
 

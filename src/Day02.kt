@@ -8,9 +8,13 @@ import kotlin.math.abs
 fun main() {
     check(part1(listOf("7 6 4 2 1")) == 1)
 
+    check(part2(listOf("7 8 4 2 1")) == 1)
+    check(part2(listOf("7 8 3 2 1")) == 0)
+    check(part2(listOf("7 8 9 8 7")) == 0)
+
     val testInput = readInput("Day02_test")
     check(part1(testInput) == 2)
-    check(part2(testInput) == 2)
+    check(part2(testInput) == 4)
 
     val input = readInput("Day02")
     part1(input).println()
@@ -24,11 +28,15 @@ fun part1(input: List<String>): Int {
 
 fun part2(input: List<String>): Int {
     val reports = parseInput(input)
-    return countSafeReports(reports)
+    return countSafeReportsWithTolerance(reports)
 }
 
 fun countSafeReports(reports: List<List<Long>>): Int {
     return reports.filter { isSafeReport(it) }.size
+}
+
+fun countSafeReportsWithTolerance(reports: List<List<Long>>): Int {
+    return reports.filter { isSafeReport(it) || isSafeReportWithTolerance(it) }.size
 }
 
 fun isSafeReport(report: List<Long>): Boolean {
@@ -46,6 +54,26 @@ fun isSafeReport(report: List<Long>): Boolean {
     return true
 }
 
+fun isSafeReportWithTolerance(report: List<Long>): Boolean {
+    for (i in 0..(report.size - 1)) {
+        // Consider the report with element at i removed.
+        val leftList = report.subList(0, i)
+        val rightList = report.subList(i + 1, report.size)
+
+        if (canBeJoined(leftList, rightList)) {
+            return true
+        }
+    }
+
+    return false
+}
+
+fun canBeJoined(
+    list1: List<Long>, list2: List<Long>
+): Boolean {
+    return isSafeReport(list1 + list2)
+}
+
 fun areLevelsSafe(level1: Long, level2: Long, shouldIncrease: Boolean): Boolean {
     if (shouldIncrease && level1 > level2) {
         return false
@@ -55,7 +83,11 @@ fun areLevelsSafe(level1: Long, level2: Long, shouldIncrease: Boolean): Boolean 
         return false
     }
 
-    val diff = abs(level1 - level2)
+    return isDifferenceSafe(level1, level2)
+}
+
+fun isDifferenceSafe(a: Long, b: Long): Boolean {
+    val diff = abs(a - b)
     return diff >= 1 && diff <= 3
 }
 

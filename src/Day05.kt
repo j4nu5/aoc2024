@@ -7,7 +7,7 @@ import java.lang.Long.parseLong
 fun main() {
     val testInput = readInput("Day05_test")
     check(part1(testInput) == 143L)
-    check(part2(testInput) == 0L)
+    check(part2(testInput) == 123L)
 
     val input = readInput("Day05")
     part1(input).println()
@@ -37,6 +37,45 @@ fun part1(input: List<String>): Long {
         val pageNumbers = parsePageNumbers(line)
         if (isUpdateValid(rules, pageNumbers)) {
             result += getMiddlePageNumber(pageNumbers)
+        }
+    }
+
+    return result
+}
+
+fun part2(input: List<String>): Long {
+    val orderingRulesInput = mutableListOf<String>()
+    var lineNumber = 0
+    while (lineNumber < input.size) {
+        val line = input[lineNumber++]
+        if (line.trim().isEmpty()) {
+            break
+        }
+
+        orderingRulesInput.add(line)
+    }
+    val rules = parseRules(orderingRulesInput)
+
+    var result = 0L
+    val pageNumberComparator = Comparator<Long> { page1, page2 ->
+        if (rules[page1]?.contains(page2)?:false) {
+            -1
+        } else if (rules[page2]?.contains(page1)?:false) {
+            1
+        } else {
+            -1
+        }
+    }
+    while (lineNumber < input.size) {
+        val line = input[lineNumber++]
+        if (line.isEmpty()) {
+            break
+        }
+
+        val pageNumbers = parsePageNumbers(line)
+        if (!isUpdateValid(rules, pageNumbers)) {
+            val fixedPageNumbers = pageNumbers.sortedWith(pageNumberComparator)
+            result += getMiddlePageNumber(fixedPageNumbers)
         }
     }
 
@@ -86,8 +125,4 @@ fun parseRules(input: List<String>): Map<Long, Set<Long>> {
     }
 
     return rules
-}
-
-fun part2(input: List<String>): Long {
-    return 0L
 }

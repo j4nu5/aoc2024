@@ -51,8 +51,7 @@ class PuzzleMap private constructor(
 
     fun floodFillGuardMovement() {
         findCurrentGuardPosition()
-        while (moveGuard()) {
-        }
+        while (moveGuard()) {}
     }
 
     private fun moveGuard(): Boolean {
@@ -70,6 +69,12 @@ class PuzzleMap private constructor(
         check(guardIndicators.contains(map[guardRow][guardCol]))
         when (map[guardRow][guardCol]) {
             FACING_UP -> {
+                if (isObstacle(guardRow - 1, guardCol)) {
+                    map[guardRow][guardCol] = FACING_RIGHT
+                    visitCount[guardRow][guardCol]++
+                    return true
+                }
+
                 if (isValidMovementPosition(guardRow - 1, guardCol)) {
                     map[guardRow][guardCol] = PATH_MARKER
                     visitCount[guardRow][guardCol]++
@@ -77,17 +82,15 @@ class PuzzleMap private constructor(
                     map[currentGuardPosition.first][currentGuardPosition.second] = FACING_UP
                     return true
                 }
-
-                if (isObstacle(guardRow - 1, guardCol) && isValidMovementPosition(guardRow, guardCol + 1)) {
-                    map[guardRow][guardCol] = PATH_MARKER
-                    visitCount[guardRow][guardCol]++
-                    currentGuardPosition = Pair(guardRow, guardCol + 1)
-                    map[currentGuardPosition.first][currentGuardPosition.second] = FACING_RIGHT
-                    return true
-                }
             }
 
             FACING_DOWN -> {
+                if (isObstacle(guardRow + 1, guardCol)) {
+                    map[guardRow][guardCol] = FACING_LEFT
+                    visitCount[guardRow][guardCol]++
+                    return true
+                }
+
                 if (isValidMovementPosition(guardRow + 1, guardCol)) {
                     map[guardRow][guardCol] = PATH_MARKER
                     visitCount[guardRow][guardCol]++
@@ -95,17 +98,15 @@ class PuzzleMap private constructor(
                     map[currentGuardPosition.first][currentGuardPosition.second] = FACING_DOWN
                     return true
                 }
-
-                if (isObstacle(guardRow + 1, guardCol) && isValidMovementPosition(guardRow, guardCol - 1)) {
-                    map[guardRow][guardCol] = PATH_MARKER
-                    visitCount[guardRow][guardCol]++
-                    currentGuardPosition = Pair(guardRow, guardCol - 1)
-                    map[currentGuardPosition.first][currentGuardPosition.second] = FACING_LEFT
-                    return true
-                }
             }
 
             FACING_LEFT -> {
+                if (isObstacle(guardRow, guardCol - 1)) {
+                    map[guardRow][guardCol] = FACING_UP
+                    visitCount[guardRow][guardCol]++
+                    return true
+                }
+
                 if (isValidMovementPosition(guardRow, guardCol - 1)) {
                     map[guardRow][guardCol] = PATH_MARKER
                     visitCount[guardRow][guardCol]++
@@ -113,30 +114,20 @@ class PuzzleMap private constructor(
                     map[currentGuardPosition.first][currentGuardPosition.second] = FACING_LEFT
                     return true
                 }
-
-                if (isObstacle(guardRow, guardCol - 1) && isValidMovementPosition(guardRow - 1, guardCol)) {
-                    map[guardRow][guardCol] = PATH_MARKER
-                    visitCount[guardRow][guardCol]++
-                    currentGuardPosition = Pair(guardRow - 1, guardCol)
-                    map[currentGuardPosition.first][currentGuardPosition.second] = FACING_UP
-                    return true
-                }
             }
 
             FACING_RIGHT -> {
+                if (isObstacle(guardRow, guardCol + 1)) {
+                    map[guardRow][guardCol] = FACING_DOWN
+                    visitCount[guardRow][guardCol]++
+                    return true
+                }
+
                 if (isValidMovementPosition(guardRow, guardCol + 1)) {
                     map[guardRow][guardCol] = PATH_MARKER
                     visitCount[guardRow][guardCol]++
                     currentGuardPosition = Pair(guardRow, guardCol + 1)
                     map[currentGuardPosition.first][currentGuardPosition.second] = FACING_RIGHT
-                    return true
-                }
-
-                if (isObstacle(guardRow, guardCol + 1) && isValidMovementPosition(guardRow + 1, guardCol)) {
-                    map[guardRow][guardCol] = PATH_MARKER
-                    visitCount[guardRow][guardCol]++
-                    currentGuardPosition = Pair(guardRow + 1, guardCol)
-                    map[currentGuardPosition.first][currentGuardPosition.second] = FACING_DOWN
                     return true
                 }
             }
@@ -188,12 +179,95 @@ class PuzzleMap private constructor(
             }
         }
     }
+
+    fun isGuardStuckInALoop(): Boolean {
+        val guardRow = currentGuardPosition.first
+        val guardCol = currentGuardPosition.second
+
+        if (guardRow < 0 || guardRow >= map.size) {
+            return false
+        }
+
+        if (guardCol < 0 || guardCol >= map[guardRow].size) {
+            return false
+        }
+
+        check(guardIndicators.contains(map[guardRow][guardCol]))
+        when (map[guardRow][guardCol]) {
+            FACING_UP -> {
+                val nextRow = guardRow - 1
+                val nextCol = guardCol
+
+                if (nextRow < 0 || nextRow >= map.size) {
+                    return false
+                }
+
+                if (nextCol < 0 || nextCol >= map[nextRow].size) {
+                    return false
+                }
+            }
+
+            FACING_DOWN -> {
+                val nextRow = guardRow + 1
+                val nextCol = guardCol
+
+                if (nextRow < 0 || nextRow >= map.size) {
+                    return false
+                }
+
+                if (nextCol < 0 || nextCol >= map[nextRow].size) {
+                    return false
+                }
+            }
+
+            FACING_LEFT -> {
+                val nextRow = guardRow
+                val nextCol = guardCol - 1
+
+                if (nextRow < 0 || nextRow >= map.size) {
+                    return false
+                }
+
+                if (nextCol < 0 || nextCol >= map[nextRow].size) {
+                    return false
+                }
+            }
+
+            FACING_RIGHT -> {
+                val nextRow = guardRow
+                val nextCol = guardCol + 1
+
+                if (nextRow < 0 || nextRow >= map.size) {
+                    return false
+                }
+
+                if (nextCol < 0 || nextCol >= map[nextRow].size) {
+                    return false
+                }
+            }
+        }
+
+        return true
+    }
+
+    fun tryBlocking(row: Int, col: Int): Boolean {
+        if (isObstacle(row, col)) {
+            return false
+        }
+
+        if (guardIndicators.contains(map[row][col])) {
+            return false
+        }
+
+        map[row][col] = OBSTACLE
+        return true
+    }
 }
 
 fun main() {
     val testInput = readInput("Day06_test")
     check(part1(testInput) == 41L)
-    check(part2(testInput) == 0L)
+    check(part2(testInput) == 6L)
 
     val input = readInput("Day06")
     part1(input).println()
@@ -209,5 +283,19 @@ fun part1(input: List<String>): Long {
 }
 
 fun part2(input: List<String>): Long {
-    return 0L
+    var numLoops = 0L
+    for (i in 0..<input.size) {
+        for (j in 0..<input[i].length) {
+            val puzzleMap = PuzzleMap.parse(input)
+            if (!puzzleMap.tryBlocking(i, j)) {
+                continue
+            }
+            puzzleMap.floodFillGuardMovement()
+            if (puzzleMap.isGuardStuckInALoop()) {
+                numLoops++
+            }
+        }
+    }
+
+    return numLoops
 }

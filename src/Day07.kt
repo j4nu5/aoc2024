@@ -2,6 +2,7 @@ package dev.sinhak.aoc2024.day07
 
 import println
 import readInput
+import kotlin.time.measureTimedValue
 
 data class Equation(
     val target: Long,
@@ -21,6 +22,20 @@ fun main() {
     val input = readInput("Day07")
     part1(input).println()
     part2(input).println()
+
+    println("\nBenchmarks -\n")
+    benchmark(curry(::part2, input), "BFS with pruning")
+}
+
+fun benchmark(solution: () -> Long, description: String) {
+    val (result, time) = measureTimedValue { solution() }
+    println("$description: $time (Result = $result)")
+}
+
+fun curry(solution: (List<String>) -> Long, input: List<String>): () -> Long {
+    return fun(): Long {
+        return solution(input)
+    }
 }
 
 fun part1(input: List<String>): Long {

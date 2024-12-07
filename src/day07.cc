@@ -6,6 +6,9 @@
 #include <sstream>
 #include <vector>
 
+extern char _binary_Day07_txt_start;
+extern char _binary_Day07_txt_end;
+
 using int64 = long long;
 
 struct Equation {
@@ -23,10 +26,13 @@ int main() {
   std::ios_base::sync_with_stdio(0);
   std::cin.tie(0);
 
-  std::string input;
   int64 result = 0;
-  while (std::getline(std::cin, input)) {
-    Equation equation = Parse(input);
+  char* input_ptr = &_binary_Day07_txt_start;
+  std::string input(input_ptr);
+  std::stringstream ss(input);
+  std::string line;
+  while (std::getline(ss, line)) {
+    Equation equation = Parse(line);
     if (CanBeSolved(equation)) {
       result += equation.target;
     }

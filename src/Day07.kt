@@ -114,10 +114,6 @@ fun canBeSatisfied(
         return equation.target == 0L
     }
 
-    if (equation.operands[0] == equation.target) {
-        return true
-    }
-
     possibleTargets.add(equation.operands[0])
     for (i in 1..<equation.operands.size) {
         val operand = equation.operands[i]
@@ -144,10 +140,6 @@ fun canBeSatisfiedWithOptAllocations(
 
     if (equation.operands.isEmpty()) {
         return equation.target == 0L
-    }
-
-    if (equation.operands[0] == equation.target) {
-        return true
     }
 
     possibleTargets.add(equation.operands[0])

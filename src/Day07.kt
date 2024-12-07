@@ -17,7 +17,7 @@ fun main() {
 
     val testInput = readInput("Day07_test")
     check(part1(testInput) == BigInteger.valueOf(3749L))
-    check(part2(testInput) == BigInteger.ZERO)
+    check(part2(testInput) == BigInteger.valueOf(11387))
 
     val input = readInput("Day07")
     part1(input).println()
@@ -29,7 +29,7 @@ fun part1(input: List<String>): BigInteger {
 
     for (line in input) {
         val equation: Equation = parse(line)
-        if (canBeSatisfied(equation)) {
+        if (canBeSatisfied(equation, ::findPossibleEvaluationsWithAddAndMultiplication)) {
             totalCalibrationResult += equation.target
         }
     }
@@ -38,10 +38,22 @@ fun part1(input: List<String>): BigInteger {
 }
 
 fun part2(input: List<String>): BigInteger {
-    return BigInteger.ZERO
+    var totalCalibrationResult = BigInteger.ZERO
+
+    for (line in input) {
+        val equation: Equation = parse(line)
+        if (canBeSatisfied(equation, ::findPossibleEvaluationsWithAddMultiplicationAndConcat)) {
+            totalCalibrationResult += equation.target
+        }
+    }
+
+    return totalCalibrationResult
 }
 
-fun canBeSatisfied(equation: Equation): Boolean {
+fun canBeSatisfied(
+    equation: Equation,
+    findPossibleEvaluations: (BigInteger, BigInteger) -> List<BigInteger>,
+): Boolean {
     var possibleTargets = mutableListOf<BigInteger>()
 
     if (equation.operands.isEmpty()) {
@@ -68,8 +80,22 @@ fun canBeSatisfied(equation: Equation): Boolean {
     return possibleTargets.contains(equation.target)
 }
 
-fun findPossibleEvaluations(target: BigInteger, operand: BigInteger): List<BigInteger> {
+fun findPossibleEvaluationsWithAddAndMultiplication(target: BigInteger, operand: BigInteger): List<BigInteger> {
     return listOf(target + operand, target * operand)
+}
+
+fun findPossibleEvaluationsWithAddMultiplicationAndConcat(
+    target: BigInteger, operand: BigInteger
+): List<BigInteger> {
+    return listOf(target + operand, target * operand, concat(target, operand))
+}
+
+fun concat(a: BigInteger, b: BigInteger): BigInteger {
+    var result = a
+    b.toString().forEach { ch ->
+        result = result * BigInteger.TEN + BigInteger.valueOf((ch - '0').toLong())
+    }
+    return result
 }
 
 fun shouldBePruned(possibleTarget: BigInteger, target: BigInteger): Boolean {

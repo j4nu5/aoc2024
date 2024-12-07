@@ -2,6 +2,7 @@ package dev.sinhak.aoc2024.day07
 
 import println
 import readInput
+import kotlin.math.pow
 import kotlin.time.measureTimedValue
 
 data class Equation(
@@ -23,16 +24,31 @@ fun main() {
     part1(input).println()
     part2(input).println()
 
+    // Equation evaluation strategies.
+    val bfsWithPruning = fun(equation: Equation): Boolean {
+        return canBeSatisfied(equation, ::findPossibleEvaluationsWithAddMultiplicationAndConcat)
+    }
+    val bfsWithPruningAndOptAllocations = fun(equation: Equation): Boolean {
+        return canBeSatisfiedWithOptAllocations(equation)
+    }
+
     println("\nBenchmarks -\n")
-    benchmark(curry(::part2, input), "BFS with pruning")
+    benchmark("Original recipe - BFS with pruning", curry(input, fun(input: List<String>): Long {
+        return part2(input, bfsWithPruning)
+    }))
+    benchmark(
+        "Extra crunchy - BFS with pruning with optimized allocations", curry(input, fun(input: List<String>): Long {
+            return part2(input, bfsWithPruningAndOptAllocations)
+        })
+    )
 }
 
-fun benchmark(solution: () -> Long, description: String) {
+fun benchmark(description: String, solution: () -> Long) {
     val (result, time) = measureTimedValue { solution() }
     println("$description: $time (Result = $result)")
 }
 
-fun curry(solution: (List<String>) -> Long, input: List<String>): () -> Long {
+fun curry(input: List<String>, solution: (List<String>) -> Long): () -> Long {
     return fun(): Long {
         return solution(input)
     }
@@ -57,6 +73,20 @@ fun part2(input: List<String>): Long {
     for (line in input) {
         val equation: Equation = parse(line)
         if (canBeSatisfied(equation, ::findPossibleEvaluationsWithAddMultiplicationAndConcat)) {
+            totalCalibrationResult += equation.target
+        }
+    }
+
+    return totalCalibrationResult
+}
+
+// Same as above except that it accepts a custom evaluation function.
+fun part2(input: List<String>, canEquationBeSatisfied: (Equation) -> Boolean): Long {
+    var totalCalibrationResult = 0L
+
+    for (line in input) {
+        val equation: Equation = parse(line)
+        if (canEquationBeSatisfied(equation)) {
             totalCalibrationResult += equation.target
         }
     }
@@ -89,6 +119,39 @@ fun canBeSatisfied(
         }
 
         possibleTargets = newPossibleTargets
+    }
+
+    return possibleTargets.contains(equation.target)
+}
+
+fun canBeSatisfiedWithOptAllocations(
+    equation: Equation,
+): Boolean {
+    // Assuming we won't overflow.
+    val numPossibleTargets = 3.toDouble().pow(equation.operands.size - 1).toInt()
+    val possibleTargets: ArrayList<Long> = ArrayList<Long>(numPossibleTargets)
+    val newPossibleTargets: ArrayList<Long> = ArrayList<Long>(numPossibleTargets)
+
+    if (equation.operands.isEmpty()) {
+        return equation.target == 0L
+    }
+
+    if (equation.operands[0] == equation.target) {
+        return true
+    }
+
+    possibleTargets.add(equation.operands[0])
+    for (i in 1..<equation.operands.size) {
+        val operand = equation.operands[i]
+
+        for (target in possibleTargets) {
+            val newTargets: List<Long> = findPossibleEvaluationsWithAddMultiplicationAndConcat(target, operand)
+            newPossibleTargets.addAll(newTargets.filter { !shouldBePruned(it, equation.target) })
+        }
+
+        possibleTargets.clear()
+        possibleTargets.addAll(newPossibleTargets)
+        newPossibleTargets.clear()
     }
 
     return possibleTargets.contains(equation.target)

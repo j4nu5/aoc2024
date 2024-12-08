@@ -17,7 +17,6 @@ struct Equation {
 
 Equation Parse(const std::string& input);
 bool CanBeSolved(const Equation& equation);
-std::vector<int64> Evaluate(int64 a, int64 b);
 int64 Concat(int64 a, int64 b);
 int NumDigits(int64 x);
 
@@ -75,14 +74,22 @@ bool CanBeSolved(const Equation& equation) {
     int64 operand = equation.operands[i];
 
     for (int64 edge_node : frontier) {
-      std::vector<int64> child_nodes = Evaluate(edge_node, operand);
+      // Addition.
+      int64 child_node = edge_node + operand;
+      if (child_node <= equation.target) {
+        new_frontier.push_back(child_node);
+      }
 
-      for (int64 child_node : child_nodes) {
-        // Prune the tree if we are above target.
-        // None of the operations can lower the result.
-        if (child_node <= equation.target) {
-          new_frontier.push_back(child_node);
-        }
+      // Multiplication.
+      child_node = edge_node * operand;
+      if (child_node <= equation.target) {
+        new_frontier.push_back(child_node);
+      }
+
+      // Concatenation.
+      child_node = Concat(edge_node, operand);
+      if (child_node <= equation.target) {
+        new_frontier.push_back(child_node);
       }
     }
 
@@ -93,16 +100,6 @@ bool CanBeSolved(const Equation& equation) {
 
   // Check if we found our target.
   return std::find(frontier.begin(), frontier.end(), equation.target) != frontier.end();
-}
-
-std::vector<int64> Evaluate(int64 a, int64 b) {
-  std::vector<int64> evals;
-
-  evals.push_back(a + b);
-  evals.push_back(a * b);
-  evals.push_back(Concat(a, b));
-
-  return evals;
 }
 
 int64 Concat(int64 a, int64 b) {

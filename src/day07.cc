@@ -6,8 +6,7 @@
 #include <sstream>
 #include <vector>
 
-extern char _binary_Day07_txt_start;
-extern char _binary_Day07_txt_end;
+#include "Day07.hpp"
 
 using int64 = long long;
 
@@ -27,8 +26,7 @@ int main() {
   std::cin.tie(0);
 
   int64 result = 0;
-  char* input_ptr = &_binary_Day07_txt_start;
-  std::string input(input_ptr);
+  std::string input(data);
   std::stringstream ss(input);
   std::string line;
   while (std::getline(ss, line)) {

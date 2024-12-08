@@ -61,57 +61,54 @@ fun findFrequency(input: Long, sortedList: List<Long>): Long {
 }
 
 fun binarySearchLeft(needle: Long, haystack: List<Long>) : Int {
-    var start = 0
-    var end = haystack.size - 1
+    val index = binarySearch(haystack) { it >= needle }
 
-    while (start < end) {
-        // mid can be equal to start.
-        val mid = start + (end - start) / 2
-        val target = haystack[mid]
-
-        when {
-            target < needle -> {
-                start = mid + 1
-            }
-            target > needle -> {
-                end = mid - 1
-            }
-            else -> {
-                end = mid
-            }
-        }
+    if (index < 0) {
+        return -1
     }
 
-    if (haystack[start] == needle) {
-        return start
+    if (haystack[index] != needle) {
+        return -1
     }
 
-    return -1
+    return index
 }
 
 fun binarySearchRight(needle: Long, haystack: List<Long>) : Int {
+    val index = binarySearch(haystack) { it > needle }
+
+    if (index <= 0) {
+        return -1
+    }
+
+    if (haystack[index - 1] != needle) {
+        return -1
+    }
+
+    return index - 1
+}
+
+// Returns the first index in [haystack] where predicate is true, -1 if such an index can't be found.
+// Assuming that haystack and a bunch of false predicates, followed by true predicates.
+fun binarySearch(haystack: List<Long>, predicate: (Long) -> Boolean) : Int {
+    if (haystack.isEmpty()) {
+        return -1
+    }
+
     var start = 0
     var end = haystack.size - 1
 
     while (start < end) {
-        // mid can be equal to end.
-        val mid = start + (end - start + 1) / 2
-        val target = haystack[mid]
+        val mid = start + (end - start) / 2
 
-        when {
-            target < needle -> {
-                start = mid + 1
-            }
-            target > needle -> {
-                end = mid - 1
-            }
-            else -> {
-                start = mid
-            }
+        if (predicate(haystack[mid])) {
+            end = mid
+        } else {
+            start = mid + 1
         }
     }
 
-    if (haystack[start] == needle) {
+    if (predicate(haystack[start])) {
         return start
     }
 

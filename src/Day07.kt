@@ -178,10 +178,28 @@ fun findPossibleEvaluationsWithAddMultiplicationAndConcat(
 
 fun concat(a: Long, b: Long): Long {
     var result = a
-    b.toString().forEach { ch ->
-        result = result * 10 + (ch - '0').toLong()
+    val numDigitsB = numDigits(b)
+
+    for (i in 0..<numDigitsB) {
+        result *= 10
     }
+    result += b
     return result
+}
+
+fun numDigits(a: Long): Long {
+    if (a == 0L) {
+        return 1L
+    }
+
+    var x = a
+    var numDigits = 0L
+    while (x > 0) {
+        x /= 10
+        numDigits++
+    }
+
+    return numDigits
 }
 
 fun shouldBePruned(possibleTarget: Long, target: Long): Boolean {

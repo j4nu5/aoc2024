@@ -5,22 +5,30 @@ import readInput
 
 const val FREE_SPACE_MARKER = -1
 
-data class FreeSpace(
+data class FreeSpaceBlock(
+    var size: Int,
+    var ptr: Int,
+)
+
+data class FileBlock(
+    val id: Int,
     val size: Int,
-    val ptr: Int,
+    var ptr: Int,
 )
 
 data class DiskLayout(
     val layout: ArrayList<Int>,
-    val freeSpaceBlocks: ArrayList<FreeSpace>,
+    val freeSpaceBlocks: ArrayList<FreeSpaceBlock>,
+    val fileBlocks: ArrayList<FileBlock>,
 )
 
 fun main() {
     check(part1(listOf("101")) == 1L)
+    check(part2(listOf("101")) == 1L)
 
     val testInput = readInput("Day09_test")
     check(part1(testInput) == 1928L)
-    check(part2(testInput) == 0L)
+    check(part2(testInput) == 2858L)
 
     val input = readInput("Day09")
     part1(input).println()
@@ -28,7 +36,9 @@ fun main() {
 }
 
 fun part2(input: List<String>): Long {
-    return 0L
+    val disk: DiskLayout = constructDiskLayout(input[0])
+    defragBlocks(disk)
+    return checksum(disk.layout)
 }
 
 fun part1(input: List<String>): Long {
@@ -45,26 +55,38 @@ fun constructDiskLayout(input: String): DiskLayout {
     println("Debug: Allocating $diskSize for disk size")
 
     val layout = ArrayList<Int>()
-    val freeSpaceBlocks = arrayListOf<FreeSpace>()
+    val freeSpaceBlocks = arrayListOf<FreeSpaceBlock>()
+    val fileBlocks = arrayListOf<FileBlock>()
     var fileId = 0
     for (i in 0..<input.length) {
         val size = (input[i] - '0')
         val isFileBlock = (i % 2 == 0)
         val diskContent = if (isFileBlock) fileId else FREE_SPACE_MARKER
 
-        repeat(size) {
-            layout.add(diskContent)
+        if (size <= 0) {
+            continue
         }
 
         if (diskContent == FREE_SPACE_MARKER) {
-            freeSpaceBlocks.add(FreeSpace(size = size, ptr = i))
+            freeSpaceBlocks.add(FreeSpaceBlock(size = size, ptr = layout.size))
+        } else {
+            fileBlocks.add(FileBlock(id = fileId, size = size, ptr = layout.size))
+        }
+
+        repeat(size) {
+            layout.add(diskContent)
         }
 
         if (isFileBlock) {
             fileId++
         }
     }
-    return DiskLayout(layout = layout, freeSpaceBlocks = freeSpaceBlocks)
+
+    return DiskLayout(
+        layout = layout,
+        freeSpaceBlocks = freeSpaceBlocks,
+        fileBlocks = fileBlocks,
+    )
 }
 
 fun defrag(disk: DiskLayout) {
@@ -86,6 +108,43 @@ fun defrag(disk: DiskLayout) {
 
         leftFreeSpacePtr = findNextLeftFreeSpacePtr(leftFreeSpacePtr, disk.layout)
         rightFilePtr = findNextRightFilePtr(rightFilePtr, disk.layout)
+    }
+}
+
+fun defragBlocks(disk: DiskLayout) {
+    if (disk.layout.isEmpty) {
+        return
+    }
+
+    for (fileBlock in disk.fileBlocks.reversed()) {
+        var freeSpaceBlockPtr = -1
+        for (i in 0..<disk.freeSpaceBlocks.size) {
+            val freeSpaceBlock = disk.freeSpaceBlocks[i]
+
+            if (freeSpaceBlock.size < fileBlock.size) {
+                continue
+            }
+
+            freeSpaceBlockPtr = i
+            break
+        }
+
+        if (freeSpaceBlockPtr == -1) {
+            continue
+        }
+
+        val freeSpaceBlock = disk.freeSpaceBlocks[freeSpaceBlockPtr]
+        val oldFileBlockPtr = fileBlock.ptr
+        fileBlock.ptr = freeSpaceBlock.ptr
+        for (j in 0..<fileBlock.size) {
+            disk.layout[freeSpaceBlock.ptr + j] = fileBlock.id
+        }
+
+        freeSpaceBlock.size -= fileBlock.size
+        freeSpaceBlock.ptr += fileBlock.size
+        for (j in 0..<fileBlock.size) {
+            disk.layout[oldFileBlockPtr + j] = FREE_SPACE_MARKER
+        }
     }
 }
 

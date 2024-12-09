@@ -58,16 +58,16 @@ fun constructDiskLayout(input: String): DiskLayout {
     val layout = ArrayList<Int>()
     val freeSpaceBlocks = arrayListOf<FreeSpaceBlock>()
     val fileBlocks = arrayListOf<FileBlock>()
-    var fileId = 0
+    var fileId = -1
     for (i in 0..<input.length) {
         val size = (input[i] - '0')
         val isFileBlock = (i % 2 == 0)
+        if (isFileBlock) {
+            fileId++
+        }
         val diskContent = if (isFileBlock) fileId else FREE_SPACE_MARKER
 
         if (size <= 0) {
-            if (isFileBlock) {
-                fileId++
-            }
             continue
         }
 
@@ -79,10 +79,6 @@ fun constructDiskLayout(input: String): DiskLayout {
 
         repeat(size) {
             layout.add(diskContent)
-        }
-
-        if (isFileBlock) {
-            fileId++
         }
     }
 

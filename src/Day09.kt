@@ -25,6 +25,7 @@ data class DiskLayout(
 fun main() {
     check(part1(listOf("101")) == 1L)
     check(part2(listOf("101")) == 1L)
+    check(part2(listOf("0322302")) == 58L)
 
     val testInput = readInput("Day09_test")
     check(part1(testInput) == 1928L)
@@ -64,6 +65,9 @@ fun constructDiskLayout(input: String): DiskLayout {
         val diskContent = if (isFileBlock) fileId else FREE_SPACE_MARKER
 
         if (size <= 0) {
+            if (isFileBlock) {
+                fileId++
+            }
             continue
         }
 
@@ -122,6 +126,10 @@ fun defragBlocks(disk: DiskLayout) {
             val freeSpaceBlock = disk.freeSpaceBlocks[i]
 
             if (freeSpaceBlock.size < fileBlock.size) {
+                continue
+            }
+
+            if (freeSpaceBlock.ptr >= fileBlock.ptr) {
                 continue
             }
 
